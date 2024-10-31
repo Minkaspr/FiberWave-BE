@@ -24,12 +24,24 @@ if (config.dbUrl && config.dbUrl.trim() !== '') {
   );
 }
 
-conexiondb.sync()
+/* conexiondb.sync()
   .then(() => {
     console.log('Database & tables created!');
   })
   .catch((error) => {
     console.error('Unable to create database & tables:', error);
+  }); */
+
+conexiondb.authenticate()
+  .then(() => {
+    console.log('Conexión a la base de datos establecida correctamente.');
+    return conexiondb.sync();
+  })
+  .then(() => {
+    console.log('Base de datos y tablas creadas correctamente.');
+  })
+  .catch((error) => {
+    console.error('No se pudo establecer la conexión a la base de datos:', error);
   });
 
 export default conexiondb;
