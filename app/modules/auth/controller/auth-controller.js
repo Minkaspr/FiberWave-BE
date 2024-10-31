@@ -1,9 +1,9 @@
 import express from 'express';
 import AuthService from '../service/auth-service.js';
-import { handleValidationErrors } from '../../middleware/validation-handler.js';
-import { successResponse, errorResponse } from '../../middleware/response-handler.js';
+import { handleValidationErrors } from '../../../middleware/validation-handler.js';
+import { successResponse, errorResponse } from '../../../middleware/response-handler.js';
 import { registerValidation, loginValidation } from '../helper/auth-validation.js';
-import { authenticateToken } from '../../middleware/auth-handler.js';
+import { authenticateToken } from '../../../middleware/auth-handler.js';
 
 const authRouter = express.Router();
 

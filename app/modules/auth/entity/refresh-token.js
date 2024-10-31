@@ -1,4 +1,4 @@
-import sequelize from '../../config/conexion-db.js';
+import sequelize from '../../../config/conexion-db.js';
 import { Model, DataTypes } from 'sequelize';
 
 const REFRESH_TOKEN_TABLE = 'refresh_token';

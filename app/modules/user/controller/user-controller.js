@@ -1,8 +1,8 @@
 import express from 'express';
-import UserService from '../service/user-service.js'
+import UserService from '../service/user-service.js'; 
 import { getByIdValidRule, insValidRules, updValidRules, updPassValidRules, updProfileValidRules, deleteValidRule } from '../helper/validation-helper.js';
-import { handleValidationErrors } from '../../middleware/validation-handler.js';
-import { successResponse, errorResponse } from '../../middleware/response-handler.js';
+import { handleValidationErrors } from '../../../middleware/validation-handler.js';
+import { successResponse, errorResponse } from '../../../middleware/response-handler.js';
 
 const userRouter = express.Router();
 

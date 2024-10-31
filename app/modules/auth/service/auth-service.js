@@ -3,7 +3,7 @@ import UserRepository from '../../user/repository/user-repository.js';
 import RefreshTokenRepository from '../repository/refresh-token-repository.js';
 import UserDTO from '../../user/entity/user-dto.js';
 import { hashPassword, comparePassword } from '../../user/helper/bcrypt-helper.js';
-import { config } from '../../config/config.js';
+import { config } from '../../../config/config.js';
 
 class AuthService {
   async register(userData) {

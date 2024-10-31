@@ -1,4 +1,4 @@
-import sequelize from '../../config/conexion-db.js';
+import sequelize from '../../../config/conexion-db.js';
 import { Model, DataTypes } from 'sequelize';
 
 const USER_TABLE = 'user';
