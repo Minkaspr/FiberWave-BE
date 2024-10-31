@@ -1,4 +1,4 @@
-import sequelize from '../../config/conexion-db.js';
+import sequelize from '../../../config/conexion-db';
 import { Model, DataTypes } from 'sequelize';
 
 const ROLE_TABLE = 'role';
