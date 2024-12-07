@@ -1,6 +1,10 @@
-# Fiberwave 🌐
+# Fiberwave Backend 🌐
 
-Fiberwave es una aplicación en desarrollo diseñada para gestionar suscripciones de servicios de Internet. La plataforma permitirá a las empresas administrar sus clientes, suscripciones, planes y pagos de manera eficiente. Este README documenta el progreso actual y describe las funcionalidades implementadas hasta ahora, consulta la [documentación completa aquí](https://spiral-math-ce8.notion.site/FiberWave-11a5180ecce9809ab7b0c1f4b99123b8?pvs=73).
+Fiberwave es una solución en desarrollo para la gestión de suscripciones de servicios de Internet. Este repositorio contiene el backend, diseñado para proporcionar una API robusta y escalable que soporta la administración de clientes, suscripciones, planes y pagos. Construido con Node.js y Express, este backend está optimizado para integrarse perfectamente con la interfaz de usuario del frontend y manejar solicitudes de manera eficiente.
+
+La arquitectura del backend está centrada en proporcionar un servicio seguro y modular, con soporte para autenticación basada en tokens (JWT), manejo de roles de usuario y extensibilidad para futuras integraciones.
+
+Para más información técnica y detalles sobre la implementación, consulta la [documentación completa aquí](https://spiral-math-ce8.notion.site/FiberWave-11a5180ecce9809ab7b0c1f4b99123b8?pvs=73).
 
 ---
 
