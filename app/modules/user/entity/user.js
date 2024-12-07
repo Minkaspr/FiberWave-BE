@@ -1,4 +1,3 @@
-import sequelize from '../../../config/conexion-db.js';
 import { Model, DataTypes } from 'sequelize';
 
 const USER_TABLE = 'user';
@@ -30,11 +29,11 @@ const UserSchema = {
     allowNull: false,
     type: DataTypes.STRING
   },
-  name: {
+  firstname: {
     allowNull: false,
     type: DataTypes.STRING
   },
-  surname: {
+  lastname: {
     allowNull: false,
     type: DataTypes.STRING
   },
@@ -42,7 +41,7 @@ const UserSchema = {
     allowNull: false,
     type: DataTypes.INTEGER,
     references: {
-      model: 'role', // Nombre de la tabla del modelo Role
+      model: 'role',
       key: 'id'
     }
   },
@@ -62,7 +61,5 @@ const UserSchema = {
     defaultValue: DataTypes.NOW
   }
 }
-
-User.init(UserSchema, User.config(sequelize));
 
 export { User, UserSchema };

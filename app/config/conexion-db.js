@@ -1,17 +1,18 @@
 import { Sequelize } from "sequelize";
 import { config } from "./config.js";
 
-let conexiondb;
+let sequelize;
 
 if (config.dbUrl && config.dbUrl.trim() !== '') {
   // Conexión remota usando la URL completa de PostgreSQL
-  conexiondb = new Sequelize(config.dbUrl, {
+  sequelize = new Sequelize(config.dbUrl, {
     dialect: 'postgres',
     logging: false,
+    timezone: '+00:00'
   });
 } else {
   // Conexión local usando variables de entorno individuales
-  conexiondb = new Sequelize(
+  sequelize = new Sequelize(
     config.dbName,
     config.dbUser,
     config.dbPassword,
@@ -20,22 +21,15 @@ if (config.dbUrl && config.dbUrl.trim() !== '') {
       port: config.dbPort,
       dialect: 'postgres',
       logging: false,
+      timezone: '+00:00'
     }
   );
 }
 
-/* conexiondb.sync()
-  .then(() => {
-    console.log('Database & tables created!');
-  })
-  .catch((error) => {
-    console.error('Unable to create database & tables:', error);
-  }); */
-
-conexiondb.authenticate()
+sequelize.authenticate()
   .then(() => {
     console.log('Conexión a la base de datos establecida correctamente.');
-    return conexiondb.sync();
+    return sequelize.sync();
   })
   .then(() => {
     console.log('Base de datos y tablas creadas correctamente.');
@@ -44,4 +38,4 @@ conexiondb.authenticate()
     console.error('No se pudo establecer la conexión a la base de datos:', error);
   });
 
-export default conexiondb;
+export default sequelize;

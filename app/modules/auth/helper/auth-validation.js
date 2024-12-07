@@ -1,7 +1,10 @@
 import { body } from 'express-validator';
 
 export const registerValidation = [
-  body('name')
+  body('firstname')
+    .notEmpty().withMessage('El nombre es obligatorio')
+    .isString().withMessage('El nombre debe ser un texto'),
+  body('lastname')
     .notEmpty().withMessage('El nombre es obligatorio')
     .isString().withMessage('El nombre debe ser un texto'),
   body('email')

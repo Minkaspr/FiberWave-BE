@@ -1,4 +1,3 @@
-import sequelize from '../../../config/conexion-db';
 import { Model, DataTypes } from 'sequelize';
 
 const ROLE_TABLE = 'role';
@@ -26,7 +25,5 @@ const RoleSchema = {
     type: DataTypes.STRING
   }
 };
-
-Role.init(RoleSchema, Role.config(sequelize));
 
 export { Role, RoleSchema };

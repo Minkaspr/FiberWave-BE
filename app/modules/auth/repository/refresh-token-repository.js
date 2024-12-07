@@ -1,4 +1,5 @@
-import { RefreshToken } from '../entity/refresh-token.js';
+//import { RefreshToken } from '../entity/refresh-token.js';
+import { RefreshToken } from '../../associations/associations.js'
 
 class RefreshTokenRepository {
   async create(refreshTokenData) {

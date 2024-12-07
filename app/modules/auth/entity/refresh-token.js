@@ -10,7 +10,7 @@ class RefreshToken extends Model {
       tableName: REFRESH_TOKEN_TABLE,
       modelName: 'RefreshToken',
       timestamps: false
-    }
+    };
   }
 }
 
@@ -58,6 +58,6 @@ const RefreshTokenSchema = {
   }
 }
 
-RefreshToken.init(RefreshTokenSchema, RefreshToken.config(sequelize));
+//RefreshToken.init(RefreshTokenSchema, RefreshToken.config(sequelize));
 
 export { RefreshToken, RefreshTokenSchema };

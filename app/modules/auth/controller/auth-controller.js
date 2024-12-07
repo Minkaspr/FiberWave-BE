@@ -1,27 +1,42 @@
 import express from 'express';
 import AuthService from '../service/auth-service.js';
 import { handleValidationErrors } from '../../../middleware/validation-handler.js';
-import { successResponse, errorResponse } from '../../../middleware/response-handler.js';
+import { authResponse, errorDetailsResponse, errorResponse, successResponse, tokenResponse } from '../../../middleware/api-response-handler.js';
 import { registerValidation, loginValidation } from '../helper/auth-validation.js';
-import { authenticateToken } from '../../../middleware/auth-handler.js';
+import { authenticateToken, validateRefreshToken } from '../../../middleware/auth-handler.js';
+import { UniqueConstraintError } from '../../user/helper/unique-constraint-error.js';
+import { CredentialError } from '../helper/auth-error.js';
 
 const authRouter = express.Router();
 
 authRouter.post('/register', registerValidation, handleValidationErrors, async (req, res) => {
   try {
     await AuthService.register(req.body);
-    successResponse(res, { message: 'Usuario registrado con éxito' }, 201);
+    return successResponse(res, 'Usuario registrado con éxito', 201);
   } catch (error) {
-    errorResponse(res, [{ message: error.message }], 400);
+    if (error instanceof UniqueConstraintError) {
+      return errorDetailsResponse(res, [{ message: error.message, field: error.field }], error.statusCode);
+    } else {
+      return errorResponse(res, 'Error interno del servidor', 500);
+    }
   }
 });
 
 authRouter.post('/login', loginValidation, handleValidationErrors, async (req, res) => {
   try {
     const { user, token, refreshToken } = await AuthService.login(req.body.email, req.body.password);
-    successResponse(res, { user, token, refreshToken }, 200);
+    res.cookie('refresh-token', refreshToken, {
+      httpOnly: true,    // No accesible desde JavaScript
+      secure: process.env.NODE_ENV === 'production',  // Solo en HTTPS
+      maxAge: 7 * 24 * 60 * 60 * 1000,  // 7 días en milisegundos
+      sameSite: 'None'
+    });
+    return authResponse(res, { user }, token, refreshToken, 200);
   } catch (error) {
-    errorResponse(res, [{ message: error.message }], 401);
+    if (error instanceof CredentialError) {
+      return errorDetailsResponse(res, [{ message: error.message, field: error.field }], error.statusCode);
+    }
+    return errorResponse(res, 'Error interno del servidor' + error.message, 500);
   }
 });
 
@@ -29,23 +44,26 @@ authRouter.get('/protected', authenticateToken, (req, res) => {
   res.send('Contenido protegido');
 });
 
-authRouter.post('/logout', async (req, res) => {
-  const { refreshToken } = req.body;
-  try {
-    const result = await AuthService.logout(refreshToken);
-    successResponse(res, result, 200);
-  } catch (error) {
-    errorResponse(res, [{ message: error.message }], 400);
-  }
-});
-
-authRouter.post('/refresh-token', async (req, res) => {
+authRouter.post('/refresh-token', validateRefreshToken, async (req, res) => {
   const { refreshToken } = req.body;
   try {
     const tokens = await AuthService.refreshToken(refreshToken);
-    successResponse(res, tokens, 200);
+    return tokenResponse(res, tokens.token, tokens.refreshToken);
   } catch (error) {
-    errorResponse(res, [{ message: error.message }], 403);
+    return errorDetailsResponse(res,[{ message: error.message, field: error.field }], 403);
+  }
+});
+
+authRouter.post('/logout', async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) {
+    return errorResponse(res, "El token de actualización es obligatorio para cerrar sesión.");
+  }
+  try {
+    const result = await AuthService.logout(refreshToken);
+    return successResponse(res, result.message);
+  } catch (error) {
+    return errorResponse(res, error.message);
   }
 });
 

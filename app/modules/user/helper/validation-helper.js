@@ -10,10 +10,10 @@ export const getByIdValidRule = () => {
 
 export const insValidRules = () => {
   return [
-    body('name')
+    body('firstname')
       .notEmpty().withMessage('El nombre es obligatorio')
       .isString().withMessage('El nombre debe ser un texto'),
-    body('surname')
+    body('lastname')
       .notEmpty().withMessage('El apellido es obligatorio')
       .isString().withMessage('El apellido debe ser un texto'),
     body('email')

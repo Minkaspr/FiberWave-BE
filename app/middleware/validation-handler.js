@@ -1,5 +1,5 @@
 import { validationResult } from 'express-validator';
-import { errorResponse } from './response-handler.js';
+import { errorDetailsResponse } from './api-response-handler.js';
 
 export const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -8,7 +8,7 @@ export const handleValidationErrors = (req, res, next) => {
       field: err.path,
       message: err.msg
     }));
-    return errorResponse(res, formattedErrors, 400);
+    return errorDetailsResponse(res, formattedErrors, 400);
   }
   next();
 };
