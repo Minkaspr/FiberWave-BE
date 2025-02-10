@@ -1,5 +1,5 @@
 import { hashPassword, comparePassword } from '../helper/bcrypt-helper.js';
-import { UniqueConstraintError } from '../helper/unique-constraint-error.js';
+import { UniqueConstraintError, NotFoundError } from '../../../middleware/custom-errors-handler.js';
 import UserRepository from '../repository/user-repository.js';
 import RoleRepository from '../../role/repository/role-repository.js';
 import CustomerService from '../../customer/service/customer-service.js';
@@ -82,90 +82,63 @@ class UserService {
     return await UserRepository.getByFirstName(firstname);
   }
 
-  /*  async createUser(user) {
-     const existingUser = await UserRepository.getByEmail(user.email);
-     if (existingUser) {
-       throw new UniqueConstraintError('email');
-     }
- 
-     const hashedPassword = await hashPassword(user.password);
- 
-     const role = await RoleRepository.findById(user.role_id);
-     if (!role) {
-       throw new Error('El rol especificado no existe');
-     }
- 
-     const newUser = await UserRepository.create({
-       ...user,
-       password: hashedPassword
-     });
-     const { id: userId } = newUser;
- 
-     switch (role.name) {
-       case 'customer':
-         await CustomerService.createCustomerData({ ...userData, user_id: userId });
-         break;
-       case 'seller':
-         await SellerService.createSellerData({ ...userData, user_id: userId });
-         break;
-       case 'admin':
-         await AdminService.createAdminData({ ...userData, user_id: userId });
-         break;
-       default:
-         throw new Error('Rol no soportado');
-     }
- 
-     return newUser;
-   }
-  */
-
-  async createUser(userData) {
-    const transaction = await sequelize.transaction(); // Inicia la transacción
+  async createUser(userData, roleData) {
+    const transaction = await sequelize.transaction();
     try {
-      // Verifica si el usuario ya existe
+      let errors = [];
+
       const existingUser = await UserRepository.getByEmail(userData.email);
       if (existingUser) {
-        throw new UniqueConstraintError('email');
+        errors.push(new UniqueConstraintError('email'));
       }
-
-      // Hash de la contraseña
-      const hashedPassword = await hashPassword(userData.password);
-      const newUser = await UserRepository.create({
-        ...userData,
-        password: hashedPassword,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }, { transaction });
-
-      console.log(new Date().toISOString());
-
-      const userId = newUser.id;
-
-      const role = await RoleRepository.findById(userData.role_id);
+  
+      const role = await RoleRepository.findByName(userData.role);
       if (!role) {
-        throw new Error('El rol especificado no existe');
+        errors.push(new NotFoundError('Rol', 'role', userData.role));
+      }
+  
+      if (errors.length > 0) {
+        throw errors;
       }
 
-      // Inserta en la tabla correspondiente según el rol
-      switch (role.name) {
-        case 'customer':
-          await CustomerService.createCustomer({ ...userData, user_id: userId }, transaction);
-          break;
-        case 'seller':
-          await SellerService.createSeller({ ...userData, user_id: userId }, transaction);
-          break;
-        case 'admin':
-          await AdminService.createAdmin({ ...userData, user_id: userId }, transaction);
-          break;
-        default:
-          throw new Error('Rol de usuario no válido');
+      const hashedPassword = await hashPassword(userData.password);
+      const newUser = await UserRepository.create(
+        { ...userData, password: hashedPassword, role_id: role.id },
+        { transaction }
+      );
+  
+      const userId = newUser.id;
+      try {
+        switch (role.name) {
+          case 'customer':
+            await CustomerService.createCustomer({ ...roleData, user_id: userId }, transaction);
+            break;
+    
+          case 'seller':
+            await SellerService.createSeller({ ...roleData, user_id: userId }, transaction);
+            break;
+    
+          case 'admin':
+            await AdminService.createAdmin({ ...roleData, user_id: userId }, transaction);
+            break;
+    
+          default:
+            throw new Error('Rol de usuario no válido');
+        }
+      } catch (error) {
+        if (error instanceof UniqueConstraintError) {
+          errors.push(error);
+          throw errors;
+        } else {
+          throw new Error(`Error al crear el rol: ${roleName} - ${error.message}`);
+        }
       }
-
-      await transaction.commit(); // Confirma la transacción
+      
+      await transaction.commit();
       return newUser;
     } catch (error) {
-      await transaction.rollback(); // Revierte todos los cambios si ocurre un error
-      throw new Error(`Error al crear el usuario: ${error.message}`);
+      await transaction.rollback();
+      throw error;
     }
   }
 

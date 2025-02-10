@@ -10,26 +10,29 @@ export const getByIdValidRule = () => {
 
 export const insValidRules = () => {
   return [
-    body('firstname')
+    body('userData.firstname')
       .notEmpty().withMessage('El nombre es obligatorio')
-      .isString().withMessage('El nombre debe ser un texto'),
-    body('lastname')
+      .isString().withMessage('El nombre debe ser un texto')
+      .isLength({ min: 3 }).withMessage('El nombre debe tener al menos 3 caracteres'),
+    body('userData.lastname')
       .notEmpty().withMessage('El apellido es obligatorio')
-      .isString().withMessage('El apellido debe ser un texto'),
-    body('email')
-      .isEmail().withMessage('Correo electrónico no válido')
-      .isString().withMessage('El correo electrónico debe ser un texto'),
-    body('password')
+      .isString().withMessage('El apellido debe ser un texto')
+      .isLength({ min: 3 }).withMessage('El apellido debe tener al menos 3 caracteres'),
+    body('userData.email')
+      .notEmpty().withMessage('El correo electrónico es obligatorio')
+      .isEmail().withMessage('Correo electrónico no válido'),
+    body('userData.password')
+      .notEmpty().withMessage('La contraseña es obligatoria')
       .isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres')
       .matches(/\d/).withMessage('La contraseña debe contener un número')
       .matches(/[a-z]/).withMessage('La contraseña debe contener una letra minúscula')
       .matches(/[A-Z]/).withMessage('La contraseña debe contener una letra mayúscula')
-      .matches(/[@$!%*?&#]/).withMessage('La contraseña debe contener un carácter especial')
-      .isString().withMessage('La contraseña debe ser un texto'),
-    body('role_id')
-      .optional()
-      .isInt({ min: 1 }).withMessage('El rol debe ser un número entero mayor a 0'),
-    body('is_active')
+      .matches(/[@$!%*?&#]/).withMessage('La contraseña debe contener un carácter especial'),
+    body('userData.role')
+      .notEmpty().withMessage('El rol es obligatorio')
+      .isString().withMessage('El rol debe ser un texto')
+      .isIn(['admin', 'seller', 'customer']).withMessage('El rol debe ser uno de los siguientes: admin, seller o customer'),
+    body('userData.is_active')
       .optional()
       .isBoolean().withMessage('El estado activo debe ser booleano')
   ];

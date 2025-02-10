@@ -1,26 +1,37 @@
 import express from 'express';
 import AuthService from '../service/auth-service.js';
-import { handleValidationErrors } from '../../../middleware/validation-handler.js';
+import { handleValidationErrors, filterAllowedFields } from '../../../middleware/validation-handler.js';
 import { authResponse, errorDetailsResponse, errorResponse, successResponse, tokenResponse } from '../../../middleware/api-response-handler.js';
-import { registerValidation, loginValidation } from '../helper/auth-validation.js';
+import { registerValidation, loginValidation } from '../helper/auth-validations.js';
 import { authenticateToken, validateRefreshToken } from '../../../middleware/auth-handler.js';
 import { UniqueConstraintError } from '../../user/helper/unique-constraint-error.js';
 import { CredentialError } from '../helper/auth-error.js';
 
 const authRouter = express.Router();
 
-authRouter.post('/register', registerValidation, handleValidationErrors, async (req, res) => {
-  try {
-    await AuthService.register(req.body);
-    return successResponse(res, 'Usuario registrado con éxito', 201);
-  } catch (error) {
-    if (error instanceof UniqueConstraintError) {
-      return errorDetailsResponse(res, [{ message: error.message, field: error.field }], error.statusCode);
-    } else {
-      return errorResponse(res, 'Error interno del servidor', 500);
+authRouter.post(
+  '/register', 
+  filterAllowedFields(['firstname', 'lastname', 'email', 'password']),
+  registerValidation, 
+  (req, res, next) => handleValidationErrors('Error al validar el usuario')(req, res, next), 
+  async (req, res) => {
+    try {
+      await AuthService.register(req.body);
+      return successResponse(res, 'Usuario registrado con éxito', 201);
+    } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        return errorDetailsResponse(
+          res,
+          [{ field: error.field, message: error.message }], // Mensaje detallado
+          'Duplicidad de campos', // Mensaje genérico
+          error.statusCode
+        );
+      } else {
+        return errorResponse(res, 'Error interno del servidor', 500);
+      }
     }
   }
-});
+);
 
 authRouter.post('/login', loginValidation, handleValidationErrors, async (req, res) => {
   try {

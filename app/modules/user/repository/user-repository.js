@@ -141,8 +141,8 @@ class UserRepository {
     });
   }
 
-  async create(user) {
-    return await User.create(user);
+  async create(user, options) {
+    return await User.create(user, options);
   }
 
   async update(id, user) {

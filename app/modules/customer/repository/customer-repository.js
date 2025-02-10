@@ -1,8 +1,8 @@
 import { Customer } from '../../associations/associations.js'
 
 class CustomerRepository {
-  async createCustomer(customerData) {
-    return await Customer.create(customerData);
+  async createCustomer(customerData, options) {
+    return await Customer.create(customerData, options);
   }
 
   async findCustomerById(id) {

@@ -1,3 +1,19 @@
+/**
+ * Utilidades para manejar respuestas HTTP de forma uniforme en toda la aplicación.
+ * 
+ * Este archivo contiene métodos para generar respuestas consistentes, incluyendo
+ * respuestas exitosas, de error y con detalles específicos.
+ * 
+ * Métodos:
+ * - apiResponse: Genera una respuesta genérica basada en los parámetros proporcionados.
+ * - authResponse: Respuesta para operaciones relacionadas con autenticación.
+ * - tokenResponse: Respuesta para generación de tokens.
+ * - dataResponse: Respuesta para enviar datos exitosamente.
+ * - errorDetailsResponse: Respuesta para errores con detalles específicos.
+ * - successResponse: Respuesta genérica para operaciones exitosas.
+ * - errorResponse: Respuesta genérica para errores.
+ */
+
 const apiResponse = (
   {
     status = '',

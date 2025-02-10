@@ -12,7 +12,7 @@ class AuthService {
   async register(userData) {
     const existingUser = await UserRepository.getByEmail(userData.email);
     if (existingUser) {
-      throw new UniqueConstraintError('email');
+      throw new UniqueConstraintError('email', 'Ya existe una cuenta registrada con este correo');
     }
 
     if (!userData.role_id) {
