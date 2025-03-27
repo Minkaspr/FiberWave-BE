@@ -112,11 +112,30 @@ class UserRepository {
     return result;
   }
 
+  async findUserWithRole(id) {
+    return await User.findByPk(id, {
+      include: [{ model: Role, as: 'role' }]
+    });
+  }
+
   async getById(id) {
     return await User.findByPk(
       id,
       {
-        include: [{ model: Role, as: 'role' }]
+        attributes: { 
+          exclude: [
+            'role_id',
+            'password',
+            'updated_at'
+          ] 
+        },
+        include: [
+          { 
+            model: Role, 
+            as: 'role', 
+            attributes: ['name'] 
+          }
+        ]
       }
     );
   }
@@ -145,12 +164,23 @@ class UserRepository {
     return await User.create(user, options);
   }
 
-  async update(id, user) {
-    return await User.update(user, { where: { id } });
+  async update(id, userData, transaction) {
+    // Filtrar solo los campos permitidos para actualización
+    const allowedFields = ['firstname', 'lastname', 'email', 'role_id', 'is_active'];
+    const updatedFields = Object.keys(userData)
+      .filter(key => allowedFields.includes(key))
+      .reduce((obj, key) => {
+        obj[key] = userData[key];
+        return obj;
+      }, {});
+
+      updatedFields.updated_at = new Date();
+    const [affectedRows] = await User.update(updatedFields, { where: { id }, transaction });
+    return affectedRows > 0;
   }
 
-  async delete(id) {
-    return await User.destroy({ where: { id } });
+  async delete(id, options = {}) {
+    return await User.destroy({ where: { id }, ...options });
   }
 
   async getUsersCountByRole() {
@@ -184,7 +214,6 @@ class UserRepository {
       { is_active: false, userCount: statusMap[false] }
     ];
   }
-
 }
 
 export default new UserRepository();

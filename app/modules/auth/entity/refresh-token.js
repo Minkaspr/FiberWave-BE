@@ -28,6 +28,7 @@ const RefreshTokenSchema = {
       model: 'user', // Nombre de la tabla del modelo User
       key: 'id'
     },
+    onDelete: 'CASCADE',
     field: 'user_id'
   },
   token: {

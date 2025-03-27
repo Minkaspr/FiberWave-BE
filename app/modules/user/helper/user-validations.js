@@ -1,10 +1,11 @@
-import { body, check } from 'express-validator';
+import { body, param, check } from 'express-validator';
 
 export const getByIdValidRule = () => {
   return [
-    check('id')
+    param('id') // Cambiar 'check' por 'param' para trabajar con parámetros de ruta
       .notEmpty().withMessage('El ID es obligatorio')
-      .isInt({ min: 1 }).withMessage('El ID debe ser un número entero mayor a 0'),
+      .isInt({ min: 1 }).withMessage('El ID debe ser un número entero mayor a 0')
+      .toInt() // Convertir el ID a número
   ];
 };
 
@@ -38,33 +39,37 @@ export const insValidRules = () => {
   ];
 };
 
+export const updValidStatus = () => {
+  return [
+    param('id')
+      .notEmpty().withMessage('El ID es obligatorio')
+      .isInt({ min: 1 }).withMessage('El ID debe ser un número entero mayor a 0'),
+    body('is_active')
+      .notEmpty().withMessage('El estado activo es obligatorio')
+      .isBoolean().withMessage('El estado activo debe ser booleano')
+  ];
+}
+
 export const updValidRules = () => {
   return [
     check('id')
       .notEmpty().withMessage('El ID es obligatorio')
       .isInt({ min: 1 }).withMessage('El ID debe ser un número entero mayor a 0'),
-    body('name')
+    body('userData.name')
       .optional()
       .isString().withMessage('El nombre debe ser un texto'),
-    body('surname')
+    body('userData.surname')
       .optional()
       .isString().withMessage('El apellido debe ser un texto'),
-    body('email')
+    body('userData.email')
       .optional()
       .isEmail().withMessage('Correo electrónico no válido')
       .isString().withMessage('El correo electrónico debe ser un texto'),
-    body('password')
-      .optional()
-      .isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres')
-      .matches(/\d/).withMessage('La contraseña debe contener un número')
-      .matches(/[a-z]/).withMessage('La contraseña debe contener una letra minúscula')
-      .matches(/[A-Z]/).withMessage('La contraseña debe contener una letra mayúscula')
-      .matches(/[@$!%*?&#]/).withMessage('La contraseña debe contener un carácter especial')
-      .isString().withMessage('La contraseña debe ser un texto'),
-    body('role_id')
-      .optional()
-      .isInt({ min: 1 }).withMessage('El rol debe ser un número entero mayor a 0'),
-    body('is_active')
+    body('userData.role')
+      .notEmpty().withMessage('El rol es obligatorio')
+      .isString().withMessage('El rol debe ser un texto')
+      .isIn(['admin', 'seller', 'customer']).withMessage('El rol debe ser uno de los siguientes: admin, seller o customer'),
+    body('userData.is_active')
       .optional()
       .isBoolean().withMessage('El estado activo debe ser booleano')
   ];
@@ -107,7 +112,7 @@ export const updProfileValidRules = () => {
 
 export const deleteValidRule = () => {
   return [
-    check('id')
+    param('id')
       .notEmpty().withMessage('El ID es obligatorio')
       .isInt({ min: 1 }).withMessage('El ID debe ser un número entero mayor a 0'),
   ];

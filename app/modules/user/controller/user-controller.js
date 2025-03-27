@@ -1,11 +1,12 @@
 import express from 'express';
 import UserService from '../service/user-service.js';
-import { getByIdValidRule, insValidRules, updValidRules, updPassValidRules, updProfileValidRules, deleteValidRule } from '../helper/user-validations.js';
+import { getByIdValidRule, insValidRules, updValidRules, updPassValidRules, updProfileValidRules, deleteValidRule, updValidStatus } from '../helper/user-validations.js';
 import { adminValidationRules } from '../../admin/helper/admin-validations.js';
 import { sellerValidationRules } from '../../seller/helper/seller-validations.js';
 import { customerValidationRules } from '../../customer/helper/customer-validations.js';
 import { handleValidationErrors } from '../../../middleware/validation-handler.js';
 import { dataResponse, errorResponse, successResponse, errorDetailsResponse } from '../../../middleware/api-response-handler.js';
+import { validationResult } from 'express-validator';
 
 const userRouter = express.Router();
 
@@ -95,7 +96,10 @@ userRouter.get('/search', async (req, res) => {
   }
 });
 
-userRouter.get('/getById/:id?', getByIdValidRule(), handleValidationErrors, async (req, res) => {
+userRouter.get('/getById/:id?', 
+  getByIdValidRule(), // Validar el parámetro de ruta
+  handleValidationErrors('Error al validar el usuario'), // Manejar errores de validación
+  async (req, res) => {
   try {
     const user = await UserService.getUserById(req.params.id);
     if (user) {
@@ -111,6 +115,7 @@ userRouter.get('/getById/:id?', getByIdValidRule(), handleValidationErrors, asyn
 userRouter.post(
   '/create',
   insValidRules(),
+  handleValidationErrors('Error al validar lo esencial del usuario'), 
   (req, res, next) => {
     const { userData, roleData } = req.body;
     switch (userData.role) {
@@ -157,16 +162,73 @@ userRouter.post(
   }
 );
 
-userRouter.put('/update/:id?', updValidRules(), handleValidationErrors, async (req, res) => {
+userRouter.put('/:id/status', updValidStatus(), handleValidationErrors('Error al validar el usuario'), async (req, res) => {
   try {
-    const updatedUser = await UserService.updateUser(req.params.id, req.body);
-    if (updatedUser[0] === 1) {
-      return successResponse(res, 'Usuario actualizado con éxito');
+    const updatedUser = await UserService.updateUserStatus(req.params.id, req.body.is_active);
+    if (updatedUser) {
+      return successResponse(res, 'Estado de usuario actualizado con éxito');
     } else {
       return errorResponse(res, 'Usuario no encontrado', 404);
     }
   } catch (error) {
     return errorResponse(res, error.message, 500);
+  }
+});
+
+userRouter.put(
+  '/update/:id?', 
+  updValidRules(), 
+  handleValidationErrors('Error al validar lo esencial del usuario'), 
+  async (req, res, next) => {
+    const { userData, roleData } = req.body;
+    switch (userData.role) {
+      case 'admin':
+        return Promise.all(adminValidationRules().map(rule => rule.run(req)))
+          .then(() => next())
+          .catch(next);
+
+      case 'seller':
+        return Promise.all(sellerValidationRules().map(rule => rule.run(req)))
+          .then(() => next())
+          .catch(next);
+
+      case 'customer':
+        return Promise.all(customerValidationRules().map(rule => rule.run(req)))
+          .then(() => next())
+          .catch(next);
+
+      default:
+        return next();
+    }
+  },
+  handleValidationErrors('Error al validar acorde al rol del usuario'), 
+  async (req, res) => {
+  try {
+    const { userData, roleData } = req.body;
+    const updatedUser = await UserService.updateUser(req.params.id, userData, roleData);
+    if (updatedUser) {
+      return successResponse(res, 'Usuario actualizado con éxito');
+    } else {
+      return errorResponse(res, 'Usuario no encontrado o sin cambios', 404);
+    }
+  } catch (error) {
+    if (Array.isArray(error)) {
+      // Obtener todos los códigos de estado de los errores
+      const statusCodes = error.map(err => err.statusCode);
+      // Determinar el código de estado más relevante
+      const finalStatusCode = statusCodes.includes(409) ? 409 : statusCodes.includes(404) ? 404 : 400;
+
+      return errorDetailsResponse(
+          res,
+          error.map(err => ({ field: err.field || err.resource, message: err.message })), 
+          'Errores en la actualización del usuario',
+          finalStatusCode
+      );
+    } else {
+        // Manejo de error individual
+        const statusCode = error.statusCode || 500;
+        return errorResponse(res, error.message, statusCode);
+    }
   }
 });
 
@@ -192,16 +254,15 @@ userRouter.put('/update-profile/:id?', updProfileValidRules(), handleValidationE
   }
 });
 
-userRouter.delete('/delete/:id?', deleteValidRule(), handleValidationErrors, async (req, res) => {
+userRouter.delete('/delete/:id?', deleteValidRule(), handleValidationErrors('Error al validar el usuario'), async (req, res) => {
   try {
     const result = await UserService.deleteUser(req.params.id);
     if (result) {
       return successResponse(res, 'Usuario eliminado con éxito');
-    } else {
-      return errorResponse(res, 'Usuario no encontrado', 404);
     }
   } catch (error) {
-    return errorResponse(res, error.message, 500);
+    const statusCode = error.statusCode || 500;
+    return errorResponse(res, error.message, statusCode);
   }
 });
 
