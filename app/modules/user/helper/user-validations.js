@@ -117,3 +117,12 @@ export const deleteValidRule = () => {
       .isInt({ min: 1 }).withMessage('El ID debe ser un número entero mayor a 0'),
   ];
 };
+
+export const deleteMultipleValidRule = () => {
+  return [
+    body('userIds')
+      .isArray({ min: 1 }).withMessage('Debe proporcionar al menos un ID de usuario.')
+      .custom((userIds) => userIds.every(id => Number.isInteger(id)))
+      .withMessage('Todos los IDs deben ser números enteros válidos.')
+  ];
+};

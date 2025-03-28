@@ -1,6 +1,6 @@
 import express from 'express';
 import UserService from '../service/user-service.js';
-import { getByIdValidRule, insValidRules, updValidRules, updPassValidRules, updProfileValidRules, deleteValidRule, updValidStatus } from '../helper/user-validations.js';
+import { getByIdValidRule, insValidRules, updValidRules, updPassValidRules, updProfileValidRules, deleteValidRule, updValidStatus, deleteMultipleValidRule } from '../helper/user-validations.js';
 import { adminValidationRules } from '../../admin/helper/admin-validations.js';
 import { sellerValidationRules } from '../../seller/helper/seller-validations.js';
 import { customerValidationRules } from '../../customer/helper/customer-validations.js';
@@ -274,5 +274,24 @@ userRouter.get('/filters', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+userRouter.delete(
+  '/delete-multiple',
+  deleteMultipleValidRule(),
+  handleValidationErrors('Error al validar los usuarios'),
+  async (req, res) => {
+    try {
+      const { userIds } = req.body; 
+      const result = await UserService.deleteMultipleUsers(userIds);
+
+      if (result) {
+        return successResponse(res, 'Usuarios eliminados con éxito');
+      }
+    } catch (error) {
+      const statusCode = error.statusCode || 500;
+      return errorResponse(res, error.message, statusCode);
+    }
+  }
+);
 
 export default userRouter;

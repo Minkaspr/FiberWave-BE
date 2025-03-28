@@ -450,6 +450,47 @@ class UserService {
       role: user.role.name
     };
   }
+
+  async deleteMultipleUsers(userIds) {
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      throw new BadRequestError('Se requiere una lista válida de IDs de usuario.');
+    }
+  
+    const transaction = await sequelize.transaction();
+    try {
+      for (const id of userIds) {
+        const user = await UserRepository.findUserWithRole(id);
+        if (!user) {
+          throw new NotFoundError('Usuario', 'id', id);
+        }
+  
+        switch (user.role.name) {
+          case 'customer':
+            await CustomerService.deleteCustomerByUserId(user.id, { transaction });
+            break;
+          case 'seller':
+            await SellerService.deleteSellerByUserId(id, { transaction });
+            break;
+          case 'admin':
+            await AdminService.deleteAdminByUserId(id, { transaction });
+            break;
+          default:
+            throw new Error(`Rol desconocido: ${user.role.name}`);
+        }
+  
+        const wasDeleted = await UserRepository.delete(id, { transaction });
+        if (!wasDeleted) {
+          throw new NotFoundError('Usuario', 'id', id);
+        }
+      }
+  
+      await transaction.commit();
+      return true;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
 }
 
 export default new UserService();
